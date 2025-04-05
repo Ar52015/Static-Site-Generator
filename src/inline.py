@@ -81,4 +81,13 @@ def split_nodes_link(old_nodes):
         if curr_index < len(curr_text):
             res.append(TextNode(curr_text[curr_index:], TextType.NORMAL_TEXT))
     return res
-            
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.NORMAL_TEXT)]
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD_TEXT)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC_TEXT)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE_TEXT)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    nodes = [node for node in nodes if not (node.text == "" and node.textType == TextType.NORMAL_TEXT)]
+    return nodes            

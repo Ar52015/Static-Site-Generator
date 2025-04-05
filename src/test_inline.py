@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from helper import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
+from inline import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes
 
 class TestSplitNodesDelimiter(unittest.TestCase):
 
@@ -324,6 +324,74 @@ class TestMarkdownImageLinkParsing(unittest.TestCase):
                 TextNode("img2", TextType.IMAGES, "https://example.com/2.jpg"),
             ],
             new_nodes,
+        )
+
+class TestMarkdownToNodeConversion(unittest.TestCase):
+    
+    def test_text_to_textnodes(self):
+        nodes = text_to_textnodes(
+            "This is **text** with an _italic_ word and a `code block` and an ![image](https://i.imgur.com/zjjcJKZ.png) and a [link](https://boot.dev)"
+        )
+        self.assertListEqual(
+            [
+                TextNode("This is ", TextType.NORMAL_TEXT),
+                TextNode("text", TextType.BOLD_TEXT),
+                TextNode(" with an ", TextType.NORMAL_TEXT),
+                TextNode("italic", TextType.ITALIC_TEXT),
+                TextNode(" word and a ", TextType.NORMAL_TEXT),
+                TextNode("code block", TextType.CODE_TEXT),
+                TextNode(" and an ", TextType.NORMAL_TEXT),
+                TextNode("image", TextType.IMAGES, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and a ", TextType.NORMAL_TEXT),
+                TextNode("link", TextType.LINKS, "https://boot.dev"),
+            ],
+            nodes,
+        )
+
+    def test_empty_text(self):
+        nodes = text_to_textnodes("")
+        self.assertListEqual([], nodes)
+
+    def test_plain_text(self):
+        nodes = text_to_textnodes("Just plain text with no formatting")
+        self.assertListEqual(
+            [TextNode("Just plain text with no formatting", TextType.NORMAL_TEXT)],
+            nodes
+        )
+
+    def test_consecutive_formatting(self):
+        nodes = text_to_textnodes("**Bold text** followed by _italic text_")
+        self.assertListEqual(
+            [
+                TextNode("Bold text", TextType.BOLD_TEXT),
+                TextNode(" followed by ", TextType.NORMAL_TEXT),
+                TextNode("italic text", TextType.ITALIC_TEXT),
+            ],
+            nodes
+        )
+
+    def test_only_special_elements(self):
+        nodes = text_to_textnodes("**Bold**_Italic_`Code`![img](https://example.com)[link](https://boot.dev)")
+        self.assertListEqual(
+            [
+                TextNode("Bold", TextType.BOLD_TEXT),
+                TextNode("Italic", TextType.ITALIC_TEXT),
+                TextNode("Code", TextType.CODE_TEXT),
+                TextNode("img", TextType.IMAGES, "https://example.com"),
+                TextNode("link", TextType.LINKS, "https://boot.dev"),
+            ],
+            nodes
+        )
+
+    def test_nested_formatting(self):
+        nodes = text_to_textnodes("This has **bold with _italic_ inside** text")
+        self.assertListEqual(
+            [
+                TextNode("This has ", TextType.NORMAL_TEXT),
+                TextNode("bold with _italic_ inside", TextType.BOLD_TEXT),
+                TextNode(" text", TextType.NORMAL_TEXT),
+            ],
+            nodes
         )
 
 if __name__ == "__main__":
