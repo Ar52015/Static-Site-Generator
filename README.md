@@ -1,2 +1,2 @@
 # Static-Site-Generator
-A project created to completed the boot.dev Static Site Generator course
+A learning-based project that converts simple markdown files to html files
